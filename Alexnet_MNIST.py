@@ -3,13 +3,14 @@ import tensorflow as tf
 
 ##################### load data ##########################
 from tensorflow.examples.tutorials.mnist import input_data
-mnist=input_data.read_data_sets("mnist_sets",one_hot=True)
+mnist=input_data.read_data_sets("MNIST",one_hot=True)
 
 ########## set net hyperparameters ##########
 learning_rate=0.0001
 epochs=20
 batch_size=128
-display_step=30
+display_step=50
+n_steps=1000
 
 ########## set net parameters ##########
 #### img shape:28*28
@@ -146,35 +147,23 @@ accuracy=tf.reduce_mean(tf.cast(correct_pred,tf.float32))
 init=tf.global_variables_initializer()
 
 with tf.Session() as sess:
-    sess.run(init)
-    step=1
+	sess.run(init)
+	for epoch in range(epochs):
+		batch_loss = 0
+		batch_accuracy = 0
+		for _ in range(mnist.train.num_examples//batch_size):
 
-    #### epoch 世代循环 ####
-    for epoch in range(epochs+1):
+			batch_x, batch_y=mnist.train.next_batch(batch_size)
 
-        #### iteration ####
-        for _ in range(mnist.train.num_examples//batch_size):
+			sess.run(optimizer,feed_dict={x:batch_x, y:batch_y})
+			loss,acc=sess.run([cost, accuracy],feed_dict={x: batch_x, y: batch_y})
+			batch_loss += loss
+			batch_accuracy += acc
+		print("Epoch "+ str(epoch) + ", Loss=" + \
+			"{:.6f}".format(batch_loss/batch_size) + ", Training Accuracy= "+ \
+			"{:.5f}".format(batch_accuracy/batch_size))
 
-            step += 1
-
-            ##### get x,y #####
-            batch_x, batch_y=mnist.train.next_batch(batch_size)
-
-            ##### optimizer ####
-            sess.run(optimizer,feed_dict={x:batch_x, y:batch_y})
-
-            
-            ##### show loss and acc ##### 
-            if step % display_step==0:
-                loss,acc=sess.run([cost, accuracy],feed_dict={x: batch_x, y: batch_y})
-                print("Epoch "+ str(epoch) + ", Minibatch Loss=" + \
-                    "{:.6f}".format(loss) + ", Training Accuracy= "+ \
-                    "{:.5f}".format(acc))
-
-
-    print("Optimizer Finished!")
-
-    ##### test accuracy #####
-    for _ in range(mnist.test.num_examples//batch_size):
-        batch_x,batch_y=mnist.test.next_batch(batch_size)
-        print("Testing Accuracy:", sess.run(accuracy, feed_dict={x: batch_x, y: batch_y}))
+	print("Optimizer Finished!")
+	for _ in range(mnist.test.num_examples//batch_size):
+		batch_x,batch_y=mnist.test.next_batch(batch_size)
+		print("Testing Accuracy:", sess.run(accuracy, feed_dict={x: batch_x, y: batch_y}))
