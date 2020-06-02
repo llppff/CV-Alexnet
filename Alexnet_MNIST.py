@@ -149,21 +149,21 @@ init=tf.global_variables_initializer()
 with tf.Session() as sess:
 	sess.run(init)
 	for epoch in range(epochs):
-		batch_loss = 0
-		batch_accuracy = 0
+		batch_train_loss = 0
+		batch_train_accuracy = 0
 		for _ in range(mnist.train.num_examples//batch_size):
 
-			batch_x, batch_y=mnist.train.next_batch(batch_size)
+			batch_train_x, batch_train_y=mnist.train.next_batch(batch_size)
 
-			sess.run(optimizer,feed_dict={x:batch_x, y:batch_y})
-			loss,acc=sess.run([cost, accuracy],feed_dict={x: batch_x, y: batch_y})
-			batch_loss += loss
-			batch_accuracy += acc
-		print("Epoch "+ str(epoch) + ", Loss=" + \
-			"{:.6f}".format(batch_loss/batch_size) + ", Training Accuracy= "+ \
-			"{:.5f}".format(batch_accuracy/batch_size))
-
-	print("Optimizer Finished!")
-	for _ in range(mnist.test.num_examples//batch_size):
-		batch_x,batch_y=mnist.test.next_batch(batch_size)
-		print("Testing Accuracy:", sess.run(accuracy, feed_dict={x: batch_x, y: batch_y}))
+			sess.run(optimizer,feed_dict={x:batch_train_x, y:batch_train_y})
+			loss,acc=sess.run([cost, accuracy],feed_dict={x: batch_train_x, y: batch_train_y})
+			batch_train_loss += loss
+			batch_train_accuracy += acc
+		print("Epoch " + str(epoch) + ", Loss=" + \
+			"{:.6f}".format(batch_train_loss / (mnist.train.num_examples // batch_size)) + ", Training Accuracy= " + \
+			"{:.5f}".format(batch_train_accuracy / (mnist.train.num_examples // batch_size)))
+		batch_test_accuracy = 0
+		for _ in range(mnist.test.num_examples//batch_size):
+			batch_x,batch_y=mnist.test.next_batch(batch_size)
+			batch_test_accuracy += sess.run(accuracy, feed_dict={x: batch_x, y: batch_y})
+		print("Testing Accuracy:", batch_test_accuracy/(mnist.test.num_examples//batch_size))
